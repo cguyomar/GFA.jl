@@ -18,14 +18,22 @@ function neighbors(g::MetaDiGraph,node::Int,dir::String)
     outn = outneighbors(g,node)
     for n in outn
         if get_prop(g,node,n,:indir)==dir1
-            res[n]=get_prop(g,node,n,:outdir)
+            if get_prop(g,node,n,:outdir)==get_prop(g,node,n,:indir)
+                res[n]="+"
+            else
+                res[n]="-"
+            end
         end
     end
 
     inn = inneighbors(g,node)
     for n in inn
         if get_prop(g,n,node,:outdir)==dir2
-            res[n] = get_prop(g,n,node,:indir)
+            if get_prop(g,n,node,:outdir)==get_prop(g,n,node,:indir)
+                res[n]="+"
+            else
+                res[n]="-"
+            end
         end
     end
     return(res)
@@ -56,4 +64,26 @@ function compare_nodes(seqs)
         end
     end
     return(remove)
+end
+
+
+
+
+function findLinearPath(g::MetaDiGraph,v::Int)
+    # Starting from a vertex with no L neighbors
+    path = OrientedNode[]
+    push!(path,OrientedNode(g,v,"+"))
+    nextnodes = neighbors(g,v,"R")
+    while (length(nextnodes)==1)
+
+        print("\n")
+        if first(nextnodes)[2]=="+"
+            push!(path,OrientedNode(g,first(nextnodes)[1],"+"))
+            nextnodes = neighbors(g,first(nextnodes)[1],"R")
+        elseif first(nextnodes)[2]=="-"
+            push!(path,OrientedNode(g,first(nextnodes)[1],"-"))
+            nextnodes = neighbors(g,first(nextnodes)[1],"L")
+        end
+    end
+    return(path)
 end
