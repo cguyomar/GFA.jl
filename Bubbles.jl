@@ -15,16 +15,16 @@ function pop_bubble!(g,node)
             r=neighbors(g,collect(keys(n2))[1],"R")
         end
 
-        inter = intersect(r,l)
+        inter = intersect(keys(r),keys(l))
         if length(inter) > 1
             # get seqs
             seqs = Dict{Int,String}()
 
             for i in 1:length(inter)
-                if !has_edge(g,first(keys(n1)),inter[i][1]) #opposite strand than node
-                    seqs[inter[i][1]] = rc(get_prop(g,inter[i][1],:seq))
+                if !has_edge(g,first(keys(n1)),inter[i]) #opposite strand than node
+                    seqs[inter[i]] = rc(get_prop(g,inter[i],:seq))
                 else
-                    seqs[inter[i][1]] = get_prop(g,inter[i][1],:seq)
+                    seqs[inter[i]] = get_prop(g,inter[i],:seq)
                 end
             end
 
