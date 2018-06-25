@@ -53,7 +53,7 @@ function compare_nodes(seqs)
         foundmatch=false
         for ref in uniq
             aln=pairalign(GlobalAlignment(),seqs[ref],seqs[node],scoremodel)
-            if score(aln)/5 > length(ref)*0.9
+            if score(aln)/5 > max(length(seqs[ref]),length(seqs[node]))*0.9
                 push!(remove,node)
                 foundmatch=true
                 continue
