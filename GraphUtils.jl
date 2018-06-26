@@ -67,23 +67,21 @@ function compare_nodes(seqs)
 end
 
 
-
-
-function findLinearPath(g::MetaDiGraph,v::Int)
-    # Starting from a vertex with no L neighbors
-    path = OrientedNode[]
-    push!(path,OrientedNode(g,v,"+"))
-    nextnodes = neighbors(g,v,"R")
-    while (length(nextnodes)==1)
-
-        print("\n")
-        if first(nextnodes)[2]=="+"
-            push!(path,OrientedNode(g,first(nextnodes)[1],"+"))
-            nextnodes = neighbors(g,first(nextnodes)[1],"R")
-        elseif first(nextnodes)[2]=="-"
-            push!(path,OrientedNode(g,first(nextnodes)[1],"-"))
-            nextnodes = neighbors(g,first(nextnodes)[1],"L")
-        end
+function rev_dir(dir::String)
+    if dir=="R"
+        return("L")
+    elseif dir=="L"
+        return("R")
+    else
+        error("format error")
     end
-    return(path)
+end
+function rev_strand(strand::String)
+    if strand=="+"
+        return("-")
+    elseif strand=="-"
+        return("+")
+    else
+        error("format error")
+    end
 end
