@@ -34,7 +34,7 @@ function is_extendable(p,g)
     if last(p.strands)=="+" ; extendDir="R" ; else ; extendDir ="L" ; end
     nextNodes = neighbors(g,lastNode,extendDir)
 
-    if length(nextNodes) > 1
+    if length(nextNodes) > 1 || length(nextNodes)==0
         return(false)
     else
         nextNode = first(keys(nextNodes))
