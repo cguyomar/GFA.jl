@@ -39,7 +39,7 @@ function neighbors(g::MetaDiGraph,node::Int,dir::String)
     return(res)
 end
 
-function compare_nodes(seqs)
+function compare_nodes(seqs::Dict{Int,String})
     # Compares a set of vertices sequences, and return vertices numbers to delete
     uniq = Int[]
     push!(uniq,first(keys(seqs)))
@@ -52,11 +52,15 @@ function compare_nodes(seqs)
 
         foundmatch=false
         for ref in uniq
-            aln=pairalign(GlobalAlignment(),seqs[ref],seqs[node],scoremodel)
-            if score(aln)/5 > max(length(seqs[ref]),length(seqs[node]))*0.9
+            if seqs[ref] == seqs[node]
                 push!(remove,node)
                 foundmatch=true
-                continue
+            else
+                aln=pairalign(GlobalAlignment(),seqs[ref],seqs[node],scoremodel)
+                if score(aln)/5 > max(length(seqs[ref]),length(seqs[node]))*0.9
+                    push!(remove,node)
+                    foundmatch=true
+                end
             end
         end
         if foundmatch==false
