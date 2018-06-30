@@ -1,6 +1,10 @@
 using LightGraphs
 using MetaGraphs
 
+isgapfilling = r".+;.+;len_[0-9]+_qual_[0-9]+_median_cov_[0-9]+"
+gapfillingQual = r".+;.+;len_[0-9]+_qual_(\w[0-9])+_median_cov_[0-9]+"
+
+
 
 function readGFA(infile::String)
     g = MetaDiGraph(PathDiGraph(0))
@@ -11,6 +15,12 @@ function readGFA(infile::String)
             add_vertex!(g)
             set_prop!(g, nv(g), :seq, String(nodeVal[3]))
             set_prop!(g, nv(g), :name, String(nodeVal[2]))
+            if ismatch(isgapfilling,nodeVal[2])
+                set_prop!(g,nv(g),:type,"gapfilling")
+                set_prop!(g,nv(g),:qual,parse(Int,match(gapfillingQual,nodeVal[2]).captures[1]))
+            else
+                set_prop!(g,nv(g),:type,"contig")
+            end
 
 
         elseif ismatch(r"L.*",line)
