@@ -40,11 +40,16 @@ function is_extendable(p,g)
         nextNode = first(keys(nextNodes))
         dir = first(values(nextNodes))
 
+        # Check that the path is not looping
+        if contains(==,p.nodes,get_prop(g,first(keys(nextNodes)),:name))
+            return(false)
+        end
+
         # Check that there is no branching
         if dir == "+"
-            revNodes = neighbors(g,nextNode,"L")
+            revNodes = neighbors(g,nextNode,rev_dir(extendDir))
         else
-            revNodes = neighbors(g,nextNode,"R")
+            revNodes = neighbors(g,nextNode,extendDir)
         end
         if length(revNodes) > 1
             return(false)
@@ -137,9 +142,9 @@ function isPathStart(g::MetaDiGraph,v::Int,dir::String)
     if length(oppNodes)==1 # It is a valid startpoint if the node before is branching
         prevNode = first(keys(oppNodes))
         if first(values(oppNodes))=="+"
-            revNodes = neighbors(g,prevNode,"R")
+            revNodes = neighbors(g,prevNode,dir)
         else
-            revNodes = neighbors(g,prevNode,"L")
+            revNodes = neighbors(g,prevNode,rev_dir(dir))
         end
         if length(revNodes)==1
             return(false)
@@ -149,9 +154,9 @@ function isPathStart(g::MetaDiGraph,v::Int,dir::String)
     if length(dirNodes)==1
         nextNode = first(keys(dirNodes))
         if first(values(dirNodes))=="+"
-            revNodes = neighbors(g,nextNode,"L")
+            revNodes = neighbors(g,nextNode,rev_dir(dir))
         else
-            revNodes = neighbors(g,nextNode,"R")
+            revNodes = neighbors(g,nextNode,dir)
         end
         if length(revNodes)==1 && first(keys(revNodes))==v
             return(true)
