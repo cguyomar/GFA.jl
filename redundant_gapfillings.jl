@@ -27,8 +27,9 @@ function merge_redundant_gapfillings!(g::MetaDiGraph,startNode::Int,dir::String)
             end
         end
     end
-
+    count = 0
     for seqStart in seqStarts
+        count+=1
         ref = ""
         breakPos = Dict{Int,Int}()
         print("New \n")
@@ -59,7 +60,11 @@ function merge_redundant_gapfillings!(g::MetaDiGraph,startNode::Int,dir::String)
 
         # Create consensus node
         add_vertex!(g)
-        nodeName = get_prop(g,startNode,:name) * "_extended_" * dir
+        if length(seqStarts)==1
+            nodeName = get_prop(g,startNode,:name) * "_extended_" * dir
+        else
+            nodeName = get_prop(g,startNode,:name) * "_extended_" * dir *"(" * string(count) *")"
+        end
         set_prop!(g,nv(g),:name,nodeName)
         set_prop!(g,nv(g),:seq,consensus)
         set_prop!(g,nv(g),:type,"super contig")
