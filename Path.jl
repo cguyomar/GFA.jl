@@ -171,7 +171,8 @@ end
 
 function merge_path!(g,p)
     add_vertex!(g)
-    set_props!(g,nv(g),Dict(:name=>p.pathName, :seq=>p.seq))
+    set_props!(g,nv(g),Dict(:name=>p.pathName, :seq=>p.seq, :type=>"super contig"))
+
 
     # Edges from previous nodes
     firstNodeName = p.nodes[1]
@@ -192,7 +193,7 @@ function merge_path!(g,p)
         end
         set_prop!(g, Edge(node,nv(g)), :indir, indir)
 
-        set_prop!(g, Edge(node,nv(g)), :outdir, p.strands[1])
+        set_prop!(g, Edge(node,nv(g)), :outdir, "+")
     end
 
     # Edges to next nodes
@@ -206,7 +207,7 @@ function merge_path!(g,p)
     for node in keys(nextNodes)
         add_edge!(g,nv(g),node)
 
-        set_prop!(g, Edge(nv(g),node), :indir, last(p.strands))
+        set_prop!(g, Edge(nv(g),node), :indir, "+")
         if nextNodes[node]=="+"
             outdir = last(p.strands)
         else
