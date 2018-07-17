@@ -6,6 +6,12 @@ function rem_vertices_byname!(g,nodenames)
     return(g)
 end
 
+function find_vertex_byname(g,nodename)
+    node = collect(filter_vertices(g,:name,nodename))[1]
+    return(node)
+end
+
+
 
 function neighbors(g::MetaDiGraph,node::Int,dir::String)
     if dir == "R"
