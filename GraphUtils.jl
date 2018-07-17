@@ -1,3 +1,29 @@
+using StatsBase
+
+function graph_stats(g::MetaDiGraph)
+    node_types = countmap(get_type.(vertices(g),g))
+    node_types
+
+    contig_length = length(join(get_seq.(collect(filter_vertices(g,:type,"contig")),g)))
+    gapfill_length = length(join(get_seq.(collect(filter_vertices(g,:type,"gapfilling")),g)))
+    super_length = length(join(get_seq.(collect(filter_vertices(g,:type,"super contig")),g)))
+
+
+    println("Number of contigs : " * string(node_types["contig"]) * " for a length of " * string(contig_length) * "bp")
+    println("Number of gapfilling : " * string(node_types["gapfilling"]) * " for a length of " * string(gapfill_length) * "bp")
+    if "super contig" in keys(node_types)
+        println("Number of super contigs : " * string(node_types["super contig"]) * " for a length of " * string(gapfill_length) * "bp")
+    end
+
+end
+
+function get_type(node,g)
+    return(get_prop(g,node,:type))
+end
+function get_seq(node,g)
+    return(get_prop(g,node,:seq))
+end
+
 function rem_vertices_byname!(g,nodenames)
     for nodename in nodenames
         to_remove = collect(filter_vertices(g,:name,nodename))[1]
