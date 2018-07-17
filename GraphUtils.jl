@@ -1,5 +1,39 @@
 using StatsBase
 
+
+function cut_edges!(g,node,dir)
+    if dir == "R"
+        dir1="+" ; dir2="-"
+    else
+        dir1="-" ; dir2="+"
+    end
+
+    inn = inneighbors(g,node)
+    it = 1
+    while it < length(inn)
+        n = inn[it]
+        if get_prop(g,n,node,:outdir)==dir2
+            rem_edge!(g,Edge(n,node))
+        else
+            it+=1
+        end
+    end
+
+    outn = outneighbors(g,node)
+    it = 1
+    while it < length(outn)
+        n = outn[it]
+        if get_prop(g,node,n,:indir)==dir1
+            rem_edge!(g,Edge(node,n))
+        else
+            it+=1
+        end
+    end
+    return(g)
+end
+
+
+
 function graph_stats(g::MetaDiGraph)
     node_types = countmap(get_type.(vertices(g),g))
     node_types
@@ -89,7 +123,7 @@ function compare_nodes(seqs::Dict{Int,String})
                 foundmatch=true
             else
                 aln=pairalign(GlobalAlignment(),seqs[ref],seqs[node],scoremodel)
-                if score(aln)/5 > max(length(seqs[ref]),length(seqs[node]))*0.9
+                if BioAlignments.score(aln)/5 > max(length(seqs[ref]),length(seqs[node]))*0.9
                     push!(remove,node)
                     foundmatch=true
                 end
