@@ -1,5 +1,4 @@
 
-to_compare = collect(keys(neighbors(g,414,"L")))
 
 function merge_redundant_gapfillings!(g::MetaDiGraph,startNode::Int,dir::String)
 
@@ -63,6 +62,7 @@ function merge_redundant_gapfillings!(g::MetaDiGraph,startNode::Int,dir::String)
         nodeName = get_prop(g,startNode,:name) * "_extended_" * dir
         set_prop!(g,nv(g),:name,nodeName)
         set_prop!(g,nv(g),:seq,consensus)
+        set_prop!(g,nv(g),:type,"super contig")
 
         add_edge!(g,startNode,nv(g))
         set_prop!(g,startNode,nv(g),:outdir,"+")
