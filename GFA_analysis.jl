@@ -9,9 +9,18 @@ include("Bubbles.jl")
 include("Path.jl")
 include("redundant_gapfillings.jl")
 
+if length(ARGS)!=3
+    println("Usage : ")
+    println("julia GFA_analysis.jl infile outfile kmerSize")
+end
+
+infile = ARGS[1]
+outfile = ARGS[2]
+kmerSize = parse(Int,ARGS[3])
+
+
 println("Loading graph")
-g = readGFA("data/minia_k71_abundancemin_2_filtered_300_gapfilling_k61_abundancemin_auto.gfa")
-kmerSize = 63
+g = readGFA(infile)
 
 println("Initial graph :")
 graph_stats(g)
@@ -46,7 +55,7 @@ while v < nv(g)
 end
 
 # Detection of linear paths
-LinearPaths = findAllLinearPaths(g)
+LinearPaths = findAllLinearPaths(g,kmerSize)
 i=1
 for path in LinearPaths
     print(i)
@@ -79,4 +88,4 @@ end
 println("Cleaned graph :")
 graph_stats(g)
 
-writeToGfa(g,"data/output.gfa",63)  # Should infer overlap
+writeToGfa(g,outfile,kmerSize)  # Should infer overlap

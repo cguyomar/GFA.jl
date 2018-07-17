@@ -28,7 +28,7 @@ mutable struct Path
     end
 end
 
-function is_extendable(p,g)
+function is_extendable(p,g,kmerSize)
     lastName = last(p.nodes)
     lastNode = collect(filter_vertices(g,:name,lastName))[1]
     if last(p.strands)=="+" ; extendDir="R" ; else ; extendDir ="L" ; end
@@ -54,13 +54,13 @@ function is_extendable(p,g)
         if length(revNodes) > 1
             return(false)
         else
-            extend_path!(p,g,dir,nextNode)
+            extend_path!(p,g,dir,nextNode,kmerSize)
             return(true)
         end
     end
 end
 
-function extend_path!(p,g,dir,node)
+function extend_path!(p,g,dir,node,kmerSize)
     seq = get_prop(g,node,:seq)
     pathName = name = get_prop(g,node,:name)
     strand=last(p.strands)
@@ -71,7 +71,7 @@ function extend_path!(p,g,dir,node)
         seq=rc(seq)
         pathName = pathName * "_Rc"
     end
-    seq=seq[64:length(seq)] # Should not be hardcoded
+    seq=seq[(kmerSize+1):length(seq)]
     push!(p.nodes,name)
     push!(p.strands,strand)
     p.seq = p.seq * seq
@@ -98,7 +98,7 @@ function getNames(v::Vector{Path})
 end
 
 
-function findAllLinearPaths(g::MetaDiGraph)
+function findAllLinearPaths(g::MetaDiGraph,kmerSize::Int)
     v=1
     paths = Vector{Path}()
     while v < nv(g)
@@ -125,7 +125,7 @@ function findAllLinearPaths(g::MetaDiGraph)
         if found
             res=true
             while res
-                res=is_extendable(p,g)
+                res=is_extendable(p,g,kmerSize)
             end
             push!(paths,p)
         end
