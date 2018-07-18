@@ -1,8 +1,5 @@
 import Base.length
 
-isgapfilling = r".+;.+;len_[0-9]+_qual_[0-9]+_median_cov_[0-9]+"
-
-using MetaGraphs
 
 mutable struct Path
     nodes::Vector{String}
