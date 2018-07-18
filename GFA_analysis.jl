@@ -66,8 +66,8 @@ while v < nv(g)
     if length(neighbors(g,v,"R")) >= 5
         g = cut_edges!(g,v,"R")
     end
-    if length(neighbors(g,v,"R")) >= 5
-        g = cut_edges!(g,v,"R")
+    if length(neighbors(g,v,"L")) >= 5
+        g = cut_edges!(g,v,"L")
     end
     v = v+1
 end
