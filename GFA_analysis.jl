@@ -38,8 +38,6 @@ end
 v=1
 while v < nv(g)
     nodeName = get_prop(g,v,:name)
-    print(v)
-    print(" ")
     g = pop_bubble!(g,v)
     if nodeName==get_prop(g,v,:name)
         v = v+1
@@ -58,7 +56,6 @@ end
 LinearPaths = findAllLinearPaths(g,kmerSize)
 i=1
 for path in LinearPaths
-    print(i)
     merge_path!(g,path)
     i=i+1
 end

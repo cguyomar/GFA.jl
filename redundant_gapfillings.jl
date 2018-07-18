@@ -32,7 +32,6 @@ function merge_redundant_gapfillings!(g::MetaDiGraph,startNode::Int,dir::String)
         count+=1
         ref = ""
         breakPos = Dict{Int,Int}()
-        print("New \n")
         refNode=0
         for node in keys(seqs)
             seq=seqs[node]
@@ -41,8 +40,6 @@ function merge_redundant_gapfillings!(g::MetaDiGraph,startNode::Int,dir::String)
                     if length(ref)==0
                         ref=seq
                         refNode = node
-                        print("Add ref") ; print(refNode)
-                        print("\n")
                     else
                         breakPos[node] = compare_strings(ref,seqs[node])
                     end
@@ -55,7 +52,6 @@ function merge_redundant_gapfillings!(g::MetaDiGraph,startNode::Int,dir::String)
         end
         mergePos = minimum(filter(x -> x>100 , collect(values(breakPos))))
         consensus = ref[1:mergePos-1]
-        print("\n :");  print(refNode)  ; print("\n")
         breakPos[refNode] = 0 # Just to keep track of the node used as ref
 
         # Create consensus node
@@ -104,10 +100,6 @@ end
 # Todo :
 # remove too short nodes?
 
-
-
-string1 = "ATCGAT"
-string2 = "ATCGTA"
 
 function compare_strings(str1,str2)
     # return position of the first difference between str1 and str2
