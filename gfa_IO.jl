@@ -1,11 +1,15 @@
+using LightGraphs
+using MetaGraphs
+
 isgapfilling = r".+;.+;len_[0-9]+_qual_([0-9]+)_median_cov_[0-9]+"
 #gapfillingQual = r".+;.+;len_[0-9]+_qual_(\w[0-9])+_median_cov_[0-9]+"
 
 
 
 function readGFA(infile::String)
+    isgapfilling = r".+;.+;len_[0-9]+_qual_([0-9]+)_median_cov_[0-9]+"
 
-    file = open(infile,"r")
+     file = open(infile,"r")
 
     g = MetaDiGraph(PathDiGraph(0))
     lines = readlines(infile)

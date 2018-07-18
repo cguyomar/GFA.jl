@@ -1,3 +1,5 @@
+using MetaGraphs
+
 function pop_bubble!(g,node)
     n1 = neighbors(g,node,"L")
     n2 = neighbors(g,node,"R")

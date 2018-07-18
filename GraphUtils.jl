@@ -1,4 +1,4 @@
-
+using StatsBase
 
 
 function cut_edges!(g,node,dir)
