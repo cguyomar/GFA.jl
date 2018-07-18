@@ -75,7 +75,6 @@ function merge_redundant_gapfillings!(g::MetaDiGraph,startNode::Int,dir::String)
 
         # Link to old nodes
         for node in keys(breakPos)
-            print(node)
             add_edge!(g,nv(g),node)
             set_prop!(g,nv(g),node,:indir,"+")
             if dir == "R"
