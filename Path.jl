@@ -295,14 +295,20 @@ function merge_path!(g,p)
 
     return(g)
 end
+function merge_all_linear_paths!(g,LinearPaths)
+    for path in LinearPaths
+        merge_path!(g,path)
+    end
+    return(g)
+end
+
+
 function remove_duplicate_paths!(paths::Vector{Path})
     i=1
     while i <= length(paths)
-        println(i)
         j=1
         path1=paths[i]
         while j <= length(paths)
-            println("\t"*string(j))
             path2=paths[j]
             if path1!=path2
                 if path1.nodes == reverse(path2.nodes)

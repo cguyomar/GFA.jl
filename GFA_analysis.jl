@@ -1,7 +1,6 @@
 
 using BioAlignments
 using MetaGraphs
-using BioSequences
 
 include("Utils.jl")
 include("GraphUtils.jl")
@@ -9,6 +8,7 @@ include("gfa_IO.jl")
 include("Bubbles.jl")
 include("Path.jl")
 include("redundant_gapfillings.jl")
+include("graph2contig.jl")
 
 if length(ARGS)!=3
     println("Usage : ")
@@ -28,49 +28,20 @@ graph_stats(g)
 
 
 
-
-
-
-
-
-
-
-
-
 # Remove all looped gapfillings
-v=1
-while v < nv(g)
-    if length(intersect(collect(keys(neighbors(g,v,"R"))),collect(keys(neighbors(g,v,"L"))))) >0
-        rem_vertex!(g,v)
-    else v=v+1
-    end
-end
-
+g = remove_self_loops!(g)
 # Remove reciprocal gapfillings
-v=1
-while v < nv(g)
-    nodeName = get_prop(g,v,:name)
-    g = pop_bubble!(g,v)
-    if nodeName==get_prop(g,v,:name)
-        v = v+1
-    end
-end
+g = pop_all_bubbles!(g)
 
 # Merge redundant gapfillings
-v = 1
-while v < nv(g)
-    merge_redundant_gapfillings!(g,v,"L")
-    merge_redundant_gapfillings!(g,v,"R")
-    v = v+1
-end
+g = merge_gapfillings!(g,kmerSize)
 
 # Detection of linear paths
 LinearPaths = findAllLinearPaths(g,kmerSize)
-i=1
-for path in LinearPaths
-    merge_path!(g,path)
-    i=i+1
-end
+g= merge_all_linear_paths!(g,LinearPaths)
+
+writeToGfa(g,outfile*"_uncut.gfa",kmerSize)  # Should infer overlap
+
 
 # disconnect branching contigs
 v = 1
@@ -99,39 +70,4 @@ graph_stats(g)
 
 writeToGfa(g,outfile,kmerSize)  # Should infer overlap
 
-
-
-# output best sequences
-connectedComponents = weakly_connected_components(g.graph)
-println("Number of connected components : $(length(connectedComponents))")
-nbComponent = 0
-for component in connectedComponents
-    nbComponent += 1
-    found = false
-    paths = Vector{Path}()
-    for node in component
-        if isDeadEnd(g,node)==false
-            continue
-        else
-            found = true
-            paths = vcat(paths,find_all_paths(g,node,isDeadEnd(g,node)))
-        end
-    end
-    if found == false # No deadend found -> circle
-        paths=find_all_paths(g,component[1],"+")
-    end
-    paths = remove_duplicate_paths!(paths)
-    bestPath = find_longest_path(paths)
-    w = FASTA.Writer(open("component_$(nbComponent)_longestPath.fasta", "w"))
-    best = FASTA.Record("component_$(nbComponent)_longestPath",bestPath.seq)
-    write(w, best)
-    flush(w)
-
-    w = FASTA.Writer(open("component_$(nbComponent)_allPaths.fasta", "w"))
-    for (i,path) in enumerate(paths)
-        path = paths[i]
-        rec = FASTA.Record("component_$(nbComponent)_path_$(i)",path.seq)
-        write(w, rec)
-    end
-    flush(w)
-end
+graph2contig(g)

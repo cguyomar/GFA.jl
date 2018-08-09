@@ -1,8 +1,16 @@
+function merge_gapfillings!(g::MetaDiGraph,overlap::Int)
+    v = 1
+    while v < nv(g)
+        merge_redundant_gapfillings!(g,v,"L",overlap)
+        merge_redundant_gapfillings!(g,v,"R",overlap)
+        v = v+1
+    end
+    return(g)
+end
 
 
-function merge_redundant_gapfillings!(g::MetaDiGraph,startNode::Int,dir::String)
+function merge_redundant_gapfillings!(g::MetaDiGraph,startNode::Int,dir::String,overlap::Int)
 
-    overlap=31
     if dir =="R" ; rc_strand = "-" ; else rc_strand="+" ; end
 
     # Starting from a contig node
@@ -19,11 +27,12 @@ function merge_redundant_gapfillings!(g::MetaDiGraph,startNode::Int,dir::String)
         seqs[node] = seq
     end
 
+    # Find unique sequence starts on a 100bp window
     seqStarts = Vector{String}()
-    for node in keys(seqs)
-        if length(seqs[node])>100
-            if !(seqs[node][1:100] in seqStarts)
-                push!(seqStarts,seqs[node][1:100])
+    for (node,seq) in enumerate(seqs)
+        if length(seq)>100
+            if !(seq[1:100] in seqStarts)
+                push!(seqStarts,seq[1:100])
             end
         end
     end

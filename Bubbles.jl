@@ -36,3 +36,15 @@ function pop_bubble!(g,node)
     end
     return(g)
 end
+
+function pop_all_bubbles!(g::MetaDiGraph)
+    v=1
+    while v < nv(g)
+        nodeName = get_prop(g,v,:name)
+        g = pop_bubble!(g,v)
+        if nodeName==get_prop(g,v,:name)
+            v = v+1
+        end
+    end
+    return(g)
+end

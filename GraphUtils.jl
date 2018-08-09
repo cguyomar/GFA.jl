@@ -155,3 +155,14 @@ function rev_strand(strand::String)
         error("format error")
     end
 end
+
+function remove_self_loops!(g::MetaDiGraph)
+    v=1
+    while v < nv(g)
+        if length(intersect(collect(keys(neighbors(g,v,"R"))),collect(keys(neighbors(g,v,"L"))))) >0
+            rem_vertex!(g,v)
+        else v=v+1
+        end
+    end
+    return(g)
+end
