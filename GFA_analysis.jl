@@ -21,7 +21,6 @@ kmerSize = parse(Int,ARGS[3])
 
 
 println("Loading graph")
-#infile = "data/ArPo28.gfa"
 g = readGFA(infile)
 
 println("Initial graph :")
@@ -119,7 +118,7 @@ for component in connectedComponents
         end
     end
     if found == false # No deadend found -> circle
-        paths=[find_all_paths(g,component[1],"+")]
+        paths=find_all_paths(g,component[1],"+")
     end
     paths = remove_duplicate_paths!(paths)
     bestPath = find_longest_path(paths)

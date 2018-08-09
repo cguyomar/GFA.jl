@@ -318,9 +318,11 @@ end
 
 function find_longest_path(paths::Vector{Path})
     maxLength = 0
+    local bestPath
     for path in paths
         if length(path.seq) > maxLength
             bestPath = path
         end
     end
+    return(bestPath)
 end
