@@ -1,8 +1,11 @@
 import Base.length
+import Base.show
+import Base.copy
 
 isgapfilling = r".+;.+;len_[0-9]+_qual_[0-9]+_median_cov_[0-9]+"
 
 using MetaGraphs
+
 
 mutable struct Path
     nodes::Vector{String}
@@ -10,7 +13,7 @@ mutable struct Path
     seq::String
     pathName::String
 
-    function Path(g::MetaDiGraph,v::Int,strand::String)
+    function Path(g::MetaDiGraph,v::Int,strand::String)  # Constructor of a one node path (initialization)
         p = props(g,v)
         nodes=Vector{String}()
         push!(nodes,p[:name])
@@ -26,6 +29,18 @@ mutable struct Path
 
         new(nodes,strands,seq,pathName)
     end
+    function Path(vlist::Vector{String},strands::Vector{String},seq::String,pathName::String) # More general constructor
+        new(vlist,strands,seq,pathName)
+    end
+end
+
+function show(io::IO, p::Path)
+    dir = is_directed(g) ? "directed" : "undirected"
+    print(io, "Path of $(length(p.nodes)) nodes for a length of $(length(p.seq))")
+end
+
+function copy(p::Path)
+    Path(deepcopy(p.nodes),deepcopy(p.strands),deepcopy(p.seq),deepcopy(p.pathName))
 end
 
 function is_extendable(p,g,kmerSize)
@@ -78,6 +93,45 @@ function extend_path!(p,g,dir,node,kmerSize)
     p.pathName = p.pathName * pathName
 
     return(p)
+end
+
+
+function extend_path!(g::MetaDiGraph,p::Path)
+    res = Vector{Path}()
+    extended = false
+    if p.strands[end]=="+" dir="R" else dir="L" end
+    nextNodes = neighbors(g,find_vertex_byname(g,p.nodes[end]),dir)
+    for node in keys(nextNodes)
+        if get_prop(g,node,:name) in p.nodes # Found a loop
+            push!(res,copy(p))
+        else
+            extended=true
+            push!(res,extend_path!(copy(p),g,nextNodes[node],node,kmerSize))
+        end
+    end
+    return(res,extended)
+end
+
+
+
+function find_all_paths(g::MetaDiGraph,node::Int,dir::String)
+    paths = [Path(g,node,dir)]
+    stop = false
+    while !stop
+        res = Vector{Path}()
+        for p in paths
+            extendedP = copy(p)
+            extendedPaths, extended = extend_path!(g,extendedP)
+            if extended
+                res = vcat(res,extendedPaths)
+            else
+                res = vcat(res,p)
+            end
+            stop = stop | !extended
+        end
+        paths = copy(res)
+    end
+    return(paths)
 end
 
 
@@ -168,6 +222,25 @@ function isPathStart(g::MetaDiGraph,v::Int,dir::String)
     end
 end
 
+function isDeadEnd(g::MetaDiGraph,v::Int)
+    if length(neighbors(g,v,"L"))==1 && length(neighbors(g,v,"R"))==0
+        return("-")
+    elseif length(neighbors(g,v,"R"))==1 && length(neighbors(g,v,"L"))==0
+        return("+")
+    else return(false)
+    end
+end
+
+# function isCircular(g::MetaDiGraph,v::Int)
+#     max_length = 1000
+#     dir="R"
+#     nextNodes = neighbors(g,v,dir)
+#     for (node,orientation) in nextNodes
+#         if orientation = "-"
+#     end
+# end
+
+
 
 function merge_path!(g,p)
     add_vertex!(g)
@@ -221,4 +294,33 @@ function merge_path!(g,p)
     g = rem_vertices_byname!(g,getNames(p))
 
     return(g)
+end
+function remove_duplicate_paths!(paths::Vector{Path})
+    i=1
+    while i <= length(paths)
+        println(i)
+        j=1
+        path1=paths[i]
+        while j <= length(paths)
+            println("\t"*string(j))
+            path2=paths[j]
+            if path1!=path2
+                if path1.nodes == reverse(path2.nodes)
+                    filter!(e->e!=path2,paths)
+                end
+            end
+            j+=1
+        end
+        i+=1
+    end
+    return(paths)
+end
+
+function find_longest_path(paths::Vector{Path})
+    maxLength = 0
+    for path in paths
+        if length(path.seq) > maxLength
+            bestPath = path
+        end
+    end
 end

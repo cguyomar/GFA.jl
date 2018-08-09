@@ -96,9 +96,6 @@ function merge_redundant_gapfillings!(g::MetaDiGraph,startNode::Int,dir::String)
     return(g)
 end
 
-# Todo :
-# remove too short nodes?
-
 
 function compare_strings(str1,str2)
     # return position of the first difference between str1 and str2
