@@ -21,7 +21,7 @@ kmerSize = parse(Int,ARGS[3])
 
 
 println("Loading graph")
-infile = "data/ArPo28.gfa"
+#infile = "data/ArPo28.gfa"
 g = readGFA(infile)
 
 println("Initial graph :")
