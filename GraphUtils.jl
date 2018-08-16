@@ -48,7 +48,11 @@ function graph_stats(g::MetaDiGraph)
     else
         println("Number of contigs : 0")
     end
-    println("Number of gapfilling : " * string(node_types["gapfilling"]) * " for a length of " * string(gapfill_length) * "bp")
+    if "gapfilling" in keys(node_types)
+        println("Number of gapfilling : " * string(node_types["gapfilling"]) * " for a length of " * string(gapfill_length) * "bp")
+    else
+        println("Number of gapfillings : 0")
+    end
     if "super contig" in keys(node_types)
         println("Number of super contigs : " * string(node_types["super contig"]) * " for a length of " * string(super_length) * "bp")
     else
