@@ -70,4 +70,4 @@ graph_stats(g)
 
 writeToGfa(g,outfile,kmerSize)  # Should infer overlap
 
-graph2contig(g)
+graph2contig(g,dirname(outfile))

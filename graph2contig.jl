@@ -1,7 +1,7 @@
 using BioSequences
 
 
-function graph2contig(g::MetaDiGraph)
+function graph2contig(g::MetaDiGraph,outdir::String)
     connectedComponents = weakly_connected_components(g.graph)
     println("Number of connected components : $(length(connectedComponents))")
     nbComponent = 0
@@ -22,12 +22,12 @@ function graph2contig(g::MetaDiGraph)
         end
         paths = remove_duplicate_paths!(paths)
         bestPath = find_longest_path(paths)
-        w = FASTA.Writer(open("component_$(nbComponent)_longestPath.fasta", "w"))
+        w = FASTA.Writer(open(joinpath(outdir,"component_$(nbComponent)_longestPath.fasta"), "w"))
         best = FASTA.Record("component_$(nbComponent)_longestPath",bestPath.seq)
         write(w, best)
         flush(w)
 
-        w = FASTA.Writer(open("component_$(nbComponent)_allPaths.fasta", "w"))
+        w = FASTA.Writer(open(joinpath(outdir,"component_$(nbComponent)_allPaths.fasta"), "w"))
         for (i,path) in enumerate(paths)
             path = paths[i]
             rec = FASTA.Record("component_$(nbComponent)_path_$(i)",path.seq)
