@@ -3,6 +3,8 @@ using BioSequences
 
 function graph2contig(g::MetaDiGraph,outdir::String)
     connectedComponents = weakly_connected_components(g.graph)
+    connectedComponents = connectedComponents[sortperm(component_size.(connectedComponents,g),rev=true)]
+
     println("Number of connected components : $(length(connectedComponents))")
     nbComponent = 0
     for component in connectedComponents
