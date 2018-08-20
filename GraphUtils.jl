@@ -176,3 +176,7 @@ function remove_self_loops!(g::MetaDiGraph)
     end
     return(g)
 end
+
+function component_size(comp::Array{Int64,1},g::MetaDiGraph)
+    return(length(join(get_seq.(comp,g)))) # Should be corrected by the number of overlaps
+end
