@@ -9,7 +9,7 @@ function graph2contig(g::MetaDiGraph,outdir::String,overlap::Int)
     nbComponent = 0
     f = open(joinpath(outdir,"component_stats.csv"),"w")
     for (i,component) in enumerate(connectedComponents)
-        write(f,string(i)*","*string(length(g,component,overlap)))
+        write(f,string(i)*","*string(length(g,component,overlap))*"\n")
         found = false
         paths = Vector{Path}()
         for node in component
