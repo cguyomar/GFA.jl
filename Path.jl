@@ -223,9 +223,9 @@ function isPathStart(g::MetaDiGraph,v::Int,dir::String)
 end
 
 function isDeadEnd(g::MetaDiGraph,v::Int)
-    if length(neighbors(g,v,"L"))==1 && length(neighbors(g,v,"R"))==0
+    if length(neighbors(g,v,"L"))>=1 && length(neighbors(g,v,"R"))==0
         return("-")
-    elseif length(neighbors(g,v,"R"))==1 && length(neighbors(g,v,"L"))==0
+    elseif length(neighbors(g,v,"R"))>=1 && length(neighbors(g,v,"L"))==0
         return("+")
     else return(false)
     end
