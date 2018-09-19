@@ -104,6 +104,9 @@ function extend_path!(g::MetaDiGraph,p::Path)
     for node in keys(nextNodes)
         if get_prop(g,node,:name) in p.nodes # Found a loop
             push!(res,copy(p))
+            if get_prop(g,node,:name) == p.nodes[1] # Circular sequence, we should stop there (Is this useful?)
+                break
+            end
         else
             extended=true
             push!(res,extend_path!(copy(p),g,nextNodes[node],node,kmerSize))
@@ -112,6 +115,21 @@ function extend_path!(g::MetaDiGraph,p::Path)
     return(res,extended)
 end
 
+function isCyclic(g::MetaDiGraph,p::Path)
+    lastNode = find_vertex_byname(g,p.nodes[end])
+    firstNode = find_vertex_byname(g,p.nodes[1])
+
+    if p.strands[end]=="-"
+        nextNodes=neighbors(g,lastNode,"L")
+    else
+        nextNodes=neighbors(g,lastNode,"R")
+    end
+    if firstNode in keys(nextNodes)
+        return(true)
+    else
+        return(false)
+    end
+end
 
 
 function find_all_paths(g::MetaDiGraph,node::Int,dir::String)

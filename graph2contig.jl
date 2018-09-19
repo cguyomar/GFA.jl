@@ -10,18 +10,40 @@ function graph2contig(g::MetaDiGraph,outdir::String,overlap::Int)
     f = open(joinpath(outdir,"component_stats.csv"),"w")
     for (i,component) in enumerate(connectedComponents)
         write(f,string(i)*","*string(length(g,component,overlap))*"\n")
-        found = false
-        paths = Vector{Path}()
+        #found = false
+        cycleFound = false
+        linearPaths = Vector{Path}()
+        cyclePaths = Vector{Path}()
+        visited = Set{Int}()
         for node in component
             if isDeadEnd(g,node)==false
-                continue
+                if node in visited
+                    continue
+                end
+                # Search a new cyclic path?
+                tmpPaths = find_all_paths(g,node,"+")
+                tmpPaths = filter(x -> isCyclic(g,x), tmpPaths)
+                if length(tmpPaths)>0
+                    cyclePaths = vcat(cyclePaths,tmpPaths)
+                    cycleFound = true
+                    # add to visited
+                    for p in tmpPaths
+                        visited = union(visited,find_vertex_byname.(g,p.nodes))
+                    end
+                end
             else
-                found = true
-                paths = vcat(paths,find_all_paths(g,node,isDeadEnd(g,node)))
+                if !cycleFound
+                    linearPaths = vcat(linearPaths,find_all_paths(g,node,isDeadEnd(g,node)))
+                end
             end
         end
-        if found == false # No deadend found -> circle
-            paths=find_all_paths(g,component[1],"+")
+        #if found == false # No deadend found -> circle
+        #    paths=find_all_paths(g,component[1],"+")
+        #end
+        if cycleFound
+            paths=cyclePaths
+        else
+            paths=LinearPaths
         end
         paths = remove_duplicate_paths!(paths)
         bestPath = find_longest_path(paths)
