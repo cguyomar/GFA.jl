@@ -43,7 +43,7 @@ function graph2contig(g::MetaDiGraph,outdir::String,overlap::Int)
         if cycleFound
             paths=cyclePaths
         else
-            paths=LinearPaths
+            paths=linearPaths
         end
         paths = remove_duplicate_paths!(paths)
         bestPath = find_longest_path(paths)
