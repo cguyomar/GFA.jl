@@ -10,11 +10,17 @@ function graph2contig(g::MetaDiGraph,outdir::String,overlap::Int)
     f = open(joinpath(outdir,"component_stats.csv"),"w")
     for (i,component) in enumerate(connectedComponents)
         write(f,string(i)*","*string(length(g,component,overlap))*"\n")
+
         #found = false
         cycleFound = false
         linearPaths = Vector{Path}()
         cyclePaths = Vector{Path}()
         visited = Set{Int}()
+
+        if length(component)==1
+            linearPaths=find_all_paths(g,component[1],"+")
+        end
+
         for node in component
             if isDeadEnd(g,node)==false
                 if node in visited
@@ -37,6 +43,7 @@ function graph2contig(g::MetaDiGraph,outdir::String,overlap::Int)
                 end
             end
         end
+
         #if found == false # No deadend found -> circle
         #    paths=find_all_paths(g,component[1],"+")
         #end
