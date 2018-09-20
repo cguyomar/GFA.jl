@@ -46,10 +46,10 @@ writeToGfa(g,outfile*"_uncut.gfa",kmerSize)  # Should infer overlap
 # disconnect branching contigs
 v = 1
 while v < nv(g)
-    if length(neighbors(g,v,"R")) >= 5
+    if length(neighbors(g,v,"R")) > 7
         g = cut_edges!(g,v,"R")
     end
-    if length(neighbors(g,v,"L")) >= 5
+    if length(neighbors(g,v,"L")) > 7
         g = cut_edges!(g,v,"L")
     end
     v = v+1

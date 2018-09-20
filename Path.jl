@@ -134,7 +134,8 @@ end
 
 function find_all_paths(g::MetaDiGraph,node::Int,dir::String)
     paths = [Path(g,node,dir)]
-    stop = false
+    nbNodes = sum(length.(paths))
+    stop=false
     while !stop
         res = Vector{Path}()
         for p in paths
@@ -145,13 +146,17 @@ function find_all_paths(g::MetaDiGraph,node::Int,dir::String)
             else
                 res = vcat(res,p)
             end
-            stop = stop | !extended
         end
         paths = copy(res)
+        newNbNodes = sum(length.(paths))
+        if newNbNodes == nbNodes
+            stop=true
+        else
+            nbNodes = newNbNodes
+        end
     end
     return(paths)
 end
-
 
 function getNames(p::Path)
     return p.nodes
