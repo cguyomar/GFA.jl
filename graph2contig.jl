@@ -18,7 +18,7 @@ function graph2contig(g::MetaDiGraph,outdir::String,overlap::Int)
         visited = Set{Int}()
 
         if length(component)==1
-            linearPaths=find_all_paths(g,component[1],"+")
+            linearPaths=find_all_paths(g,component[1],"+",kmerSize)
         end
 
         for node in component
@@ -27,7 +27,7 @@ function graph2contig(g::MetaDiGraph,outdir::String,overlap::Int)
                     continue
                 end
                 # Search a new cyclic path?
-                tmpPaths = find_all_paths(g,node,"+")
+                tmpPaths = find_all_paths(g,node,"+",kmerSize)
                 tmpPaths = filter(x -> isCyclic(g,x), tmpPaths)
                 if length(tmpPaths)>0
                     cyclePaths = vcat(cyclePaths,tmpPaths)
@@ -39,7 +39,7 @@ function graph2contig(g::MetaDiGraph,outdir::String,overlap::Int)
                 end
             else
                 if !cycleFound
-                    linearPaths = vcat(linearPaths,find_all_paths(g,node,isDeadEnd(g,node)))
+                    linearPaths = vcat(linearPaths,find_all_paths(g,node,isDeadEnd(g,node)),kmerSize)
                 end
             end
         end

@@ -96,11 +96,15 @@ function extend_path!(p,g,dir,node,kmerSize)
 end
 
 
-function extend_path!(g::MetaDiGraph,p::Path)
+function extend_path!(g::MetaDiGraph,p::Path,kmerSize::Int,stopNodes::Vector{Int})
     res = Vector{Path}()
     extended = false
     if p.strands[end]=="+" dir="R" else dir="L" end
     nextNodes = neighbors(g,find_vertex_byname(g,p.nodes[end]),dir)
+    if length(intersect(stopNodes,keys(nextNodes)))>0
+        push!(res,copy(p))
+        return(res,false)
+    end
     for node in keys(nextNodes)
         if get_prop(g,node,:name) in p.nodes # Found a loop
             push!(res,copy(p))
@@ -132,15 +136,17 @@ function isCyclic(g::MetaDiGraph,p::Path)
 end
 
 
-function find_all_paths(g::MetaDiGraph,node::Int,dir::String)
+function find_all_paths(g::MetaDiGraph,node::Int,dir::String,kmerSize::Int,stopNodes=Vector{Int}(0)::Vector{Int})
     paths = [Path(g,node,dir)]
     nbNodes = sum(length.(paths))
     stop=false
     while !stop
+        print(length(paths[1].nodes))
+
         res = Vector{Path}()
         for p in paths
             extendedP = copy(p)
-            extendedPaths, extended = extend_path!(g,extendedP)
+            extendedPaths, extended = extend_path!(g,extendedP,kmerSize,stopNodes)
             if extended
                 res = vcat(res,extendedPaths)
             else
@@ -157,6 +163,8 @@ function find_all_paths(g::MetaDiGraph,node::Int,dir::String)
     end
     return(paths)
 end
+
+
 
 function getNames(p::Path)
     return p.nodes
