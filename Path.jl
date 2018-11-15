@@ -56,7 +56,7 @@ function is_extendable(p,g,kmerSize)
         dir = first(values(nextNodes))
 
         # Check that the path is not looping
-        if contains(==,p.nodes,get_prop(g,first(keys(nextNodes)),:name))
+        if get_prop(g,nextNode,:name) in p.nodes
             return(false)
         end
 
@@ -141,7 +141,7 @@ function find_all_paths(g::MetaDiGraph,node::Int,dir::String,kmerSize::Int,stopN
     nbNodes = sum(length.(paths))
     stop=false
     while !stop
-        print(length(paths[1].nodes))
+        println(length(paths[1].nodes))
 
         res = Vector{Path}()
         for p in paths

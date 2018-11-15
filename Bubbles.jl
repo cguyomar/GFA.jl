@@ -15,7 +15,7 @@ function pop_bubble!(g,node)
             r=neighbors(g,collect(keys(n2))[1],"R")
         end
 
-        inter = intersect(keys(r),keys(l))
+        inter = collect(intersect(keys(r),keys(l)))
         if length(inter) > 1
             # get seqs
             seqs = Dict{Int,String}()

@@ -35,12 +35,11 @@ end
 
 
 function graph_stats(g::MetaDiGraph)
-    node_types = countmap(get_type.(vertices(g),g))
-    node_types
+    node_types = countmap(map(x -> get_type(x,g), vertices(g)))
 
-    contig_length = length(join(get_seq.(collect(filter_vertices(g,:type,"contig")),g)))
-    gapfill_length = length(join(get_seq.(collect(filter_vertices(g,:type,"gapfilling")),g)))
-    super_length = length(join(get_seq.(collect(filter_vertices(g,:type,"super contig")),g)))
+    contig_length = length(join(map(x -> get_seq(x,g),collect(filter_vertices(g,:type,"contig")))))
+    gapfill_length = length(join(map(x -> get_seq(x,g),collect(filter_vertices(g,:type,"gapfilling")))))
+    super_length = length(join(map(x -> get_seq(x,g),collect(filter_vertices(g,:type,"super contig")))))
 
 
     if "contig" in keys(node_types)
@@ -122,7 +121,7 @@ function compare_nodes(seqs::Dict{Int,String})
     remove = Int[]
     scoremodel = AffineGapScoreModel(EDNAFULL, gap_open=-5, gap_extend=-1)
     for node in keys(seqs)
-        if contains(==,uniq,node)
+        if node in uniq
             continue
         end
 

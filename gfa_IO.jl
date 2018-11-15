@@ -16,12 +16,12 @@ function readGFA(infile::String)
 
     while !eof(file)
         line = readline(file)
-        if ismatch(r"S.*",line)
+        if occursin(r"S.*",line)
             nodeVal = split(line,"\t")
             add_vertex!(g)
             set_prop!(g, nv(g), :seq, String(nodeVal[3]))
             set_prop!(g, nv(g), :name, String(nodeVal[2]))
-            if ismatch(isgapfilling,nodeVal[2])
+            if occursin(isgapfilling,nodeVal[2])
                 set_prop!(g,nv(g),:type,"gapfilling")
                 set_prop!(g,nv(g),:qual,parse(Int,match(isgapfilling,nodeVal[2]).captures[1]))
             else
@@ -29,7 +29,7 @@ function readGFA(infile::String)
             end
 
 
-        elseif ismatch(r"L.*",line)
+        elseif occursin(r"L.*",line)
             nodeVal = split(line,"\t")
             lv = first(filter_vertices(g,:name,nodeVal[2]))
             rv = first(filter_vertices(g,:name,nodeVal[4]))
