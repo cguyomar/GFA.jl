@@ -1,6 +1,8 @@
 
 using BioAlignments
 using MetaGraphs
+using LightGraphs
+using BiDiGraph
 
 include("Utils.jl")
 include("GraphUtils.jl")
@@ -15,13 +17,19 @@ if length(ARGS)!=3
     println("julia GFA_analysis.jl infile outfile kmerSize")
 end
 
-infile = ARGS[1]
-outfile = ARGS[2]
-kmerSize = parse(Int,ARGS[3])
+# infile = ARGS[1]
+# outfile = ARGS[2]
+# kmerSize = parse(Int,ARGS[3])
+infile = "data/example_graph.gfa"
+infile = "data/redundance_example.gfa"
+outfile = "new"
+kmerSize = 63
+
 
 
 println("Loading graph")
 g = readGFA(infile)
+writeToGfa(g,outfile*"_read.gfa",kmerSize)  # Should infer overlap
 
 println("Initial graph :")
 graph_stats(g)
@@ -30,11 +38,14 @@ graph_stats(g)
 
 # Remove all looped gapfillings
 g = remove_self_loops!(g)
+
 # Remove reciprocal gapfillings
 g = pop_all_bubbles!(g)
+writeToGfa(g,outfile*"_bubbles.gfa",kmerSize)  # Should infer overlap
 
 # Merge redundant gapfillings
 g = merge_gapfillings!(g,kmerSize)
+writeToGfa(g,outfile*"_merged.gfa",kmerSize)  # Should infer overlap
 
 # Detection of linear paths
 LinearPaths = findAllLinearPaths(g,kmerSize)

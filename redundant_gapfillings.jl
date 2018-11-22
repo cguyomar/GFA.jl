@@ -1,4 +1,4 @@
-function merge_gapfillings!(g::MetaDiGraph,overlap::Int)
+function merge_gapfillings!(g::MetaBiDiGraph,overlap::Int)
     v = 1
     while v < nv(g)
         merge_redundant_gapfillings!(g,v,"L",overlap)
@@ -9,17 +9,24 @@ function merge_gapfillings!(g::MetaDiGraph,overlap::Int)
 end
 
 
-function merge_redundant_gapfillings!(g::MetaDiGraph,startNode::Int,dir::String,overlap::Int)
+function merge_redundant_gapfillings!(g::MetaBiDiGraph,startNode::Int,dir::String,overlap::Int)
 
     if dir =="R" ; rc_strand = "-" ; else rc_strand="+" ; end
 
     # Starting from a contig node
-    gapfillings = neighbors(g,startNode,dir)
+    if get_prop(g,startNode,:type)=="gapfilling"
+        return(g)
+    end
+    if dir =="R"
+        gapfillings = outneighbors(g,startNode)
+    else
+        gapfillings = inneighbors(g,startNode)
+    end
 
     # Get sequences
     seqs=Dict{Int,String}()
-    for node in keys(gapfillings)
-        if gapfillings[node]==rc_strand
+    for node in gapfillings
+        if change_dir(g,node,startNode)
             seq = rc(get_prop(g,node,:seq))
         else
             seq = get_prop(g,node,:seq)
@@ -29,22 +36,23 @@ function merge_redundant_gapfillings!(g::MetaDiGraph,startNode::Int,dir::String,
 
     # Find unique sequence starts on a 100bp window
     seqStarts = Vector{String}()
-    for (node,seq) in enumerate(seqs)
-        if length(seq)>100
+    for (node,seq) in seqs
+        if length(seq) > 100
             if !(seq[1:100] in seqStarts)
                 push!(seqStarts,seq[1:100])
             end
         end
     end
-    count = 0
+    nbSeq = 0
     for seqStart in seqStarts
-        count+=1
+        nbSeq += 1
         ref = ""
         breakPos = Dict{Int,Int}()
         refNode=0
-        for node in keys(seqs)
+        # We search the first diverging positions between 1 seq and all the others
+        for node in gapfillings
             seq=seqs[node]
-            if length(seq)>100
+            if length(seq) > 100
                 if seq[1:100]==seqStart
                     if length(ref)==0
                         ref=seq
@@ -59,7 +67,7 @@ function merge_redundant_gapfillings!(g::MetaDiGraph,startNode::Int,dir::String,
             continue
             #Nothing to compare
         end
-        mergePos = minimum(filter(x -> x>100 , collect(values(breakPos))))
+        mergePos = minimum(filter(x -> x>100 , collect(values(breakPos)))) # first diverging position
         consensus = ref[1:mergePos-1]
         breakPos[refNode] = 0 # Just to keep track of the node used as ref
 
@@ -68,38 +76,43 @@ function merge_redundant_gapfillings!(g::MetaDiGraph,startNode::Int,dir::String,
         if length(seqStarts)==1
             nodeName = get_prop(g,startNode,:name) * "_extended_" * dir
         else
-            nodeName = get_prop(g,startNode,:name) * "_extended_" * dir *"(" * string(count) *")"
+            nodeName = get_prop(g,startNode,:name) * "_extended_" * dir *"(" * string(nbSeq) *")"
         end
         set_prop!(g,nv(g),:name,nodeName)
         set_prop!(g,nv(g),:seq,consensus)
         set_prop!(g,nv(g),:type,"super contig")
 
-        add_edge!(g,startNode,nv(g))
-        set_prop!(g,startNode,nv(g),:outdir,"+")
+        #add_edge!(g,startNode,nv(g))
         if dir =="R"
-            set_prop!(g,startNode,nv(g),:indir,"+")
+            add_edge!(g,SimpleBiEdge(startNode,nv(g),"+","+"))
         else
-            set_prop!(g,startNode,nv(g),:indir,"-")
+            add_edge!(g,SimpleBiEdge(startNode,nv(g),"-","+"))
         end
-
-        # Link to old nodes
+        # Link to previous nodes
         for node in keys(breakPos)
-            add_edge!(g,nv(g),node)
-            set_prop!(g,nv(g),node,:indir,"+")
-            if dir == "R"
-                set_prop!(g,nv(g),node,:outdir,gapfillings[node])
+            @assert length(list_edges(g,node,startNode))==1
+            if change_dir(g,node,startNode)
+                if dir == "R"
+                    add_edge!(g,SimpleBiEdge(nv(g),node,"+","-"))
+                else
+                    add_edge!(g,SimpleBiEdge(nv(g),node,"+","+"))
+                end
             else
-                set_prop!(g,nv(g),node,:outdir,rev_strand(gapfillings[node]))
+                if dir == "R"
+                    add_edge!(g,SimpleBiEdge(nv(g),node,"+","-"))
+                else
+                    add_edge!(g,SimpleBiEdge(nv(g),node,"+","+"))
+                end
             end
-            # Shorten old node
-            if (gapfillings[node] == "+" && dir =="R") || (gapfillings[node] == "-" && dir =="L")
+
+            # Shorten previous node
+            if !change_dir(g,node,startNode)
                 set_prop!(g,node,:seq,get_prop(g,node,:seq)[mergePos+1-overlap:end])
             else
                 set_prop!(g,node,:seq,get_prop(g,node,:seq)[1:end-mergePos+overlap])
             end
             # remove old edge
-            rem_edge!(g,startNode,node)
-            rem_edge!(g,node,startNode)
+            rem_edge!(g,list_edges(g,node,startNode)[1])
         end
     end
     return(g)

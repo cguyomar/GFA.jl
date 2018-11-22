@@ -34,31 +34,18 @@ end
 
 
 
-function graph_stats(g::MetaDiGraph)
-    node_types = countmap(get_type.(vertices(g),g))
-    node_types
+function graph_stats(g::MetaBiDiGraph)
+    node_types = countmap([get_type(v,g) for v in vertices(g)])
 
-    contig_length = length(join(get_seq.(collect(filter_vertices(g,:type,"contig")),g)))
-    gapfill_length = length(join(get_seq.(collect(filter_vertices(g,:type,"gapfilling")),g)))
-    super_length = length(join(get_seq.(collect(filter_vertices(g,:type,"super contig")),g)))
-
-
-    if "contig" in keys(node_types)
-        println("Number of contigs : " * string(node_types["contig"]) * " for a length of " * string(contig_length) * "bp")
-    else
-        println("Number of contigs : 0")
+    for type in ["contig","gapfilling","super contig"]
+        nodes = filter_vertices(g,:type,type)
+        total_length = length(join([get_seq(v,g) for v in filter_vertices(g,:type,type)]))
+        if type in keys(node_types)
+            println("Number of "*type*" : " * string(node_types[type]) * " for a length of " * string(total_length) * "bp")
+        else
+            println("Number of " * type * " : 0")
+        end
     end
-    if "gapfilling" in keys(node_types)
-        println("Number of gapfilling : " * string(node_types["gapfilling"]) * " for a length of " * string(gapfill_length) * "bp")
-    else
-        println("Number of gapfillings : 0")
-    end
-    if "super contig" in keys(node_types)
-        println("Number of super contigs : " * string(node_types["super contig"]) * " for a length of " * string(super_length) * "bp")
-    else
-        println("Number of super contigs : 0")
-    end
-
 end
 
 function get_type(node,g)
@@ -83,37 +70,37 @@ end
 
 
 
-function neighbors(g::MetaDiGraph,node::Int,dir::String)
-    if dir == "R"
-        dir1="+" ; dir2="-"
-    else
-        dir1="-" ; dir2="+"
-    end
-
-    res=Dict{Int,String}()
-    outn = outneighbors(g,node)
-    for n in outn
-        if get_prop(g,node,n,:indir)==dir1
-            if get_prop(g,node,n,:outdir)==get_prop(g,node,n,:indir)
-                res[n]="+"
-            else
-                res[n]="-"
-            end
-        end
-    end
-
-    inn = inneighbors(g,node)
-    for n in inn
-        if get_prop(g,n,node,:outdir)==dir2
-            if get_prop(g,n,node,:outdir)==get_prop(g,n,node,:indir)
-                res[n]="+"
-            else
-                res[n]="-"
-            end
-        end
-    end
-    return(res)
-end
+# function neighbors(g::MetaDiGraph,node::Int,dir::String)
+#     if dir == "R"
+#         dir1="+" ; dir2="-"
+#     else
+#         dir1="-" ; dir2="+"
+#     end
+#
+#     res=Dict{Int,String}()
+#     outn = outneighbors(g,node)
+#     for n in outn
+#         if get_prop(g,node,n,:indir)==dir1
+#             if get_prop(g,node,n,:outdir)==get_prop(g,node,n,:indir)
+#                 res[n]="+"
+#             else
+#                 res[n]="-"
+#             end
+#         end
+#     end
+#
+#     inn = inneighbors(g,node)
+#     for n in inn
+#         if get_prop(g,n,node,:outdir)==dir2
+#             if get_prop(g,n,node,:outdir)==get_prop(g,n,node,:indir)
+#                 res[n]="+"
+#             else
+#                 res[n]="-"
+#             end
+#         end
+#     end
+#     return(res)
+# end
 
 function compare_nodes(seqs::Dict{Int,String})
     # Compares a set of vertices sequences, and return vertices numbers to delete
@@ -122,10 +109,9 @@ function compare_nodes(seqs::Dict{Int,String})
     remove = Int[]
     scoremodel = AffineGapScoreModel(EDNAFULL, gap_open=-5, gap_extend=-1)
     for node in keys(seqs)
-        if contains(==,uniq,node)
+        if node in uniq
             continue
         end
-
         foundmatch=false
         for ref in uniq
             if seqs[ref] == seqs[node]
@@ -166,10 +152,10 @@ function rev_strand(strand::String)
     end
 end
 
-function remove_self_loops!(g::MetaDiGraph)
+function remove_self_loops!(g::MetaBiDiGraph)
     v=1
     while v < nv(g)
-        if length(intersect(collect(keys(neighbors(g,v,"R"))),collect(keys(neighbors(g,v,"L"))))) >0
+        if v in outneighbors(g,v)
             rem_vertex!(g,v)
         else v=v+1
         end

@@ -4,16 +4,14 @@ import Base.copy
 
 isgapfilling = r".+;.+;len_[0-9]+_qual_[0-9]+_median_cov_[0-9]+"
 
-using MetaGraphs
-
 
 mutable struct Path
-    nodes::Vector{String}
+    nodes::Vector{String}  # Should be a vector of Int
     strands::Vector{String}
     seq::String
     pathName::String
 
-    function Path(g::MetaDiGraph,v::Int,strand::String)  # Constructor of a one node path (initialization)
+    function Path(g::MetaBiDiGraph,v::Int,strand::String)  # Constructor of a one node path (initialization)
         p = props(g,v)
         nodes=Vector{String}()
         push!(nodes,p[:name])
@@ -46,29 +44,35 @@ end
 function is_extendable(p,g,kmerSize)
     lastName = last(p.nodes)
     lastNode = collect(filter_vertices(g,:name,lastName))[1]
-    if last(p.strands)=="+" ; extendDir="R" ; else ; extendDir ="L" ; end
-    nextNodes = neighbors(g,lastNode,extendDir)
+    strand = last(p.strands)
+    if strand == "+"
+        nextNodes = outneighbors(g,lastNode)
+    else
+        nextNodes = inneighbors(g,lastNode)
+    end
 
-    if length(nextNodes) > 1 || length(nextNodes)==0
+    if length(nextNodes) !=1
         return(false)
     else
-        nextNode = first(keys(nextNodes))
-        dir = first(values(nextNodes))
+        nextNode = nextNodes[1]
+        dir = change_dir(g,lastNode,nextNode)
+        if dir newStrand = rev_strand(strand) else newStrand = strand end
 
         # Check that the path is not looping
-        if contains(==,p.nodes,get_prop(g,first(keys(nextNodes)),:name))
+        if get_prop(g,nextNode,:name) in p.nodes
             return(false)
         end
 
         # Check that there is no branching
-        if dir == "+"
-            revNodes = neighbors(g,nextNode,rev_dir(extendDir))
+        if newStrand == "+"
+            revNodes = inneighbors(g,nextNode)
         else
-            revNodes = neighbors(g,nextNode,extendDir)
+            revNodes = outneighbors(g,nextNode)
         end
-        if length(revNodes) > 1
+        if length(revNodes) > 1 # Branching
             return(false)
         else
+            if dir dir="-" else dir ="+" end
             extend_path!(p,g,dir,nextNode,kmerSize)
             return(true)
         end
@@ -96,20 +100,30 @@ function extend_path!(p,g,dir,node,kmerSize)
 end
 
 
-function extend_path!(g::MetaDiGraph,p::Path)
+function extend_path!(g::MetaBiDiGraph,p::Path)
     res = Vector{Path}()
     extended = false
-    if p.strands[end]=="+" dir="R" else dir="L" end
-    nextNodes = neighbors(g,find_vertex_byname(g,p.nodes[end]),dir)
-    for node in keys(nextNodes)
-        if get_prop(g,node,:name) in p.nodes # Found a loop
+    lastNode = find_vertex_byname(g,p.nodes[end])
+    if p.strands[end] == "+"
+        nextNodes = outneighbors(g,lastNode)
+    else
+        nextNodes = inneighbors(g,lastNode)
+    end
+
+    for node in nextNodes
+        nodeName = get_prop(g,node,:name)
+        if nodeName in p.nodes # Found a loop
             push!(res,copy(p))
-            if get_prop(g,node,:name) == p.nodes[1] # Circular sequence, we should stop there (Is this useful?)
+            if nodeName == p.nodes[1] # Circular sequence, we should stop there
                 break
             end
         else
             extended=true
-            push!(res,extend_path!(copy(p),g,nextNodes[node],node,kmerSize))
+            if change_dir(g,node,lastNode)
+                newDir = rev_strand(p.strands[end])
+            else newDir = p.strands[end]
+            end
+            push!(res,extend_path!(copy(p),g,newDir,node,kmerSize))
         end
     end
     return(res,extended)
@@ -132,10 +146,10 @@ function isCyclic(g::MetaDiGraph,p::Path)
 end
 
 
-function find_all_paths(g::MetaDiGraph,node::Int,dir::String)
+function find_all_paths(g::MetaBiDiGraph,node::Int,dir::String)
     paths = [Path(g,node,dir)]
     nbNodes = sum(length.(paths))
-    stop=false
+    stop = false
     while !stop
         res = Vector{Path}()
         for p in paths
@@ -175,7 +189,7 @@ function getNames(v::Vector{Path})
 end
 
 
-function findAllLinearPaths(g::MetaDiGraph,kmerSize::Int)
+function findAllLinearPaths(g::MetaBiDiGraph,kmerSize::Int)
     v=1
     paths = Vector{Path}()
     while v < nv(g)
@@ -202,7 +216,7 @@ function findAllLinearPaths(g::MetaDiGraph,kmerSize::Int)
         if found
             res=true
             while res
-                res=is_extendable(p,g,kmerSize)
+                res = is_extendable(p,g,kmerSize)
             end
             push!(paths,p)
         end
@@ -212,16 +226,28 @@ function findAllLinearPaths(g::MetaDiGraph,kmerSize::Int)
     return(paths)
 end
 
-function isPathStart(g::MetaDiGraph,v::Int,dir::String)
-    dirNodes = neighbors(g,v,dir)
-    oppNodes = neighbors(g,v,rev_dir(dir))
+function isPathStart(g::MetaBiDiGraph,v::Int,dir::String)
+    if dir == "R"
+        dirNodes = outneighbors(g,v)
+        oppNodes = inneighbors(g,v)
+    else
+        dirNodes = inneighbors(g,v)
+        oppNodes = outneighbors(g,v)
+    end
 
+    # That shoud be factorized with a function to find nodes with a common L/R neighbor
     if length(oppNodes)==1 # It is a valid startpoint if the node before is branching
-        prevNode = first(keys(oppNodes))
-        if first(values(oppNodes))=="+"
-            revNodes = neighbors(g,prevNode,dir)
+        prevNode = oppNodes[1]
+        if change_dir(g,prevNode,v)
+            if dir == "R"
+                revNodes = inneighbors(g,prevNode)
+            else  revNodes = outneighbors(g,prevNode)
+            end
         else
-            revNodes = neighbors(g,prevNode,rev_dir(dir))
+            if dir == "R"
+                revNodes = outneighbors(g,prevNode)
+            else  revNodes = inneighbors(g,prevNode)
+            end
         end
         if length(revNodes)==1
             return(false)
@@ -229,13 +255,22 @@ function isPathStart(g::MetaDiGraph,v::Int,dir::String)
     end
 
     if length(dirNodes)==1
-        nextNode = first(keys(dirNodes))
-        if first(values(dirNodes))=="+"
-            revNodes = neighbors(g,nextNode,rev_dir(dir))
+        nextNode = dirNodes[1]
+        if change_dir(g,nextNode,v)
+            if dir == "R"
+                revNodes = outneighbors(g,nextNode)
+            else
+                revNodes = inneighbors(g,nextNode)
+            end
         else
-            revNodes = neighbors(g,nextNode,dir)
+            if dir == "R"
+                revNodes = inneighbors(g,nextNode)
+            else
+                revNodes = outneighbors(g,nextNode)
+            end
         end
-        if length(revNodes)==1 && first(keys(revNodes))==v
+
+        if length(revNodes)==1 && revNodes[1]==v
             return(true)
         else
             return(false)
@@ -244,6 +279,7 @@ function isPathStart(g::MetaDiGraph,v::Int,dir::String)
         return(false)
     end
 end
+
 
 function isDeadEnd(g::MetaDiGraph,v::Int)
     if length(neighbors(g,v,"L"))>=1 && length(neighbors(g,v,"R"))==0
@@ -269,48 +305,41 @@ function merge_path!(g,p)
     add_vertex!(g)
     set_props!(g,nv(g),Dict(:name=>p.pathName, :seq=>p.seq, :type=>"super contig"))
 
-
     # Edges from previous nodes
     firstNodeName = p.nodes[1]
-    firstNode = collect(filter_vertices(g,:name,firstNodeName))[1]
+    firstNode = find_vertex_byname(g,firstNodeName)
 
     if p.strands[1]=="+"
-        prevNodes = neighbors(g,firstNode,"L")
+        prevNodes = inneighbors(g,firstNode)
     else
-        prevNodes = neighbors(g,firstNode,"R")
+        prevNodes = outneighbors(g,firstNode)
     end
-    for node in keys(prevNodes)
-        add_edge!(g,node,nv(g))
-
-        if prevNodes[node]=="+"
-            indir = p.strands[1]
-        else
+    for node in prevNodes
+        # Simplify this
+        if change_dir(g,node,firstNode)
             indir = rev_strand(p.strands[1])
+        else
+            indir = p.strands[1]
         end
-        set_prop!(g, Edge(node,nv(g)), :indir, indir)
-
-        set_prop!(g, Edge(node,nv(g)), :outdir, "+")
+        add_edge!(g,SimpleBiEdge(node,nv(g),indir,"+"))
     end
 
     # Edges to next nodes
     lastNodeName = last(p.nodes)
-    lastNode = collect(filter_vertices(g,:name,lastNodeName))[1]
+    lastNode = find_vertex_byname(g,lastNodeName)
     if last(p.strands)=="+"
-        nextNodes = neighbors(g,lastNode,"R")
+        nextNodes = outneighbors(g,lastNode)
     else
-        nextNodes = neighbors(g,lastNode,"L")
+        nextNodes = inneighbors(g,lastNode)
     end
-    for node in keys(nextNodes)
-        add_edge!(g,nv(g),node)
-
-        set_prop!(g, Edge(nv(g),node), :indir, "+")
-        if nextNodes[node]=="+"
-            outdir = last(p.strands)
+    for node in nextNodes
+        if change_dir(g,node,lastNode)
+            outdir = rev_strand(p.strands[end])
         else
-            outdir = rev_strand(last(p.strands))
+            outdir = p.strands[end]
         end
+        add_edge!(g,SimpleBiEdge(nv(g),node,"+",outdir))
 
-        set_prop!(g, Edge(nv(g),node), :outdir, outdir)
     end
 
     # Remove previous nodes
