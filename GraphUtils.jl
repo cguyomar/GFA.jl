@@ -119,6 +119,9 @@ function compare_nodes(seqs::Dict{Int,String})
                 foundmatch=true
             else
                 aln=pairalign(GlobalAlignment(),seqs[ref],seqs[node],scoremodel)
+                # TODO
+                # replace score by cout_match/length_aln
+                # (Consider overlap length)
                 if BioAlignments.score(aln)/5 > max(length(seqs[ref]),length(seqs[node]))*0.9
                     push!(remove,node)
                     foundmatch=true

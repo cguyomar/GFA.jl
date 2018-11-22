@@ -21,8 +21,8 @@ end
 # outfile = ARGS[2]
 # kmerSize = parse(Int,ARGS[3])
 infile = "data/example_graph.gfa"
-infile = "data/redundance_example.gfa"
-outfile = "new"
+#infile = "data/redundance_example.gfa"
+outfile = "data/example_out.gfa"
 kmerSize = 63
 
 
@@ -69,6 +69,7 @@ end
 # remove small contigs
 v = 1
 while v < nv(g)
+    # TODO Only if unconnected
     if length(get_prop(g,v,:seq)) < 100
         rem_vertex!(g,v)
     else
