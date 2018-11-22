@@ -146,15 +146,21 @@ function isCyclic(g::MetaDiGraph,p::Path)
 end
 
 
+<<<<<<< HEAD
 function find_all_paths(g::MetaBiDiGraph,node::Int,dir::String)
+=======
+function find_all_paths(g::MetaDiGraph,node::Int,dir::String,kmerSize::Int,stopNodes=Vector{Int}(0)::Vector{Int})
+>>>>>>> 76130d145e32beab26475c23d693f3785d78a3a3
     paths = [Path(g,node,dir)]
     nbNodes = sum(length.(paths))
     stop = false
     while !stop
+        println(length(paths[1].nodes))
+
         res = Vector{Path}()
         for p in paths
             extendedP = copy(p)
-            extendedPaths, extended = extend_path!(g,extendedP)
+            extendedPaths, extended = extend_path!(g,extendedP,kmerSize,stopNodes)
             if extended
                 res = vcat(res,extendedPaths)
             else
@@ -171,6 +177,8 @@ function find_all_paths(g::MetaBiDiGraph,node::Int,dir::String)
     end
     return(paths)
 end
+
+
 
 function getNames(p::Path)
     return p.nodes
