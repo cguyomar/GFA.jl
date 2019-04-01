@@ -17,13 +17,12 @@ if length(ARGS)!=3
     println("julia GFA_analysis.jl infile outfile kmerSize")
 end
 
-# infile = ARGS[1]
-# outfile = ARGS[2]
-# kmerSize = parse(Int,ARGS[3])
-infile = "data/example_graph.gfa"
-#infile = "data/redundance_example.gfa"
-outfile = "data/example_out.gfa"
-kmerSize = 63
+infile = ARGS[1]
+outfile = ARGS[2]
+kmerSize = parse(Int,ARGS[3])
+#infile = "data/example_graph.gfa"
+#infile = "/home/cg94xoli/git/MindTheGap_graph/pipeline/genome_graph/failed_simplification/L7Lc20.manually_simplified.gfa"
+#outfile = "data/example_out.gfa"
 
 
 

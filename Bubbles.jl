@@ -2,7 +2,7 @@ function pop_bubble!(g::MetaBiDiGraph,node::Int)
     n1 = inneighbors(g,node)
     n2 = outneighbors(g,node)
 
-    if length(n1)==length(n2)==1
+    if length(n1)==length(n2)==1 && n1 != n2
         if change_dir(g,node,n1[1])
             l = inneighbors(g,n1[1])
         else
@@ -41,6 +41,7 @@ end
 function pop_all_bubbles!(g::MetaBiDiGraph)
     v=1
     while v < nv(g)
+        print(v)
         nodeName = get_prop(g,v,:name)
         g = pop_bubble!(g,v)
         if nodeName == get_prop(g,v,:name)
