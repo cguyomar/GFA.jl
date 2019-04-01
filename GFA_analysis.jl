@@ -59,10 +59,10 @@ v = 1
 while v < nv(g)
     global g,v
 
-    if length(LightGraphs.neighbors(g.graph,v,"R")) > 7
+    if length(outneighbors(g,v) > 7
         g = cut_edges!(g,v,"R")
     end
-    if length(LightGraphs.neighbors(g.graph,v,"L")) > 7
+    if length(inneighbors(g,v)) > 7
         g = cut_edges!(g,v,"L")
     end
     v = v+1
